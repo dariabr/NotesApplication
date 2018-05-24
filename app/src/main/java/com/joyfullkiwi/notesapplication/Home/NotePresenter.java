@@ -4,29 +4,29 @@ import com.arellomobile.mvp.MvpPresenter;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
 
-public class NotePresenter  extends MvpPresenter<NoteView>{
+public class NotePresenter extends MvpPresenter<NoteView> {
 
-    private NoteInteractor noteInteractor;
+  private NoteInteractor noteInteractor;
 
-    public NotePresenter(){
+  public NotePresenter() {
 
-        noteInteractor = NoteInteractor.init();
+    noteInteractor = NoteInteractor.init();
 
-    }
+  }
 
-    public void loadData(){
+  public void loadData() {
 
-        getViewState().setSwipeRefreshing(true);
+    getViewState().setSwipeRefreshing(true);
 
-        noteInteractor.getAllFromBataBase()
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(realmResults -> {
-                    getViewState().setSwipeRefreshing(false);
-                    //передача даных в UI
-                    getViewState().onSuccesLoadNotes(realmResults);
-                });
+    noteInteractor.getAllFromBataBase()
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe(realmResults -> {
+          getViewState().setSwipeRefreshing(false);
+          //передача даных в UI
+          getViewState().onSuccesLoadNotes(realmResults);
+        });
 
 
-    }
+  }
 
 }

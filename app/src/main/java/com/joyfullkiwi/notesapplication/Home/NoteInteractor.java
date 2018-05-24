@@ -1,8 +1,11 @@
 package com.joyfullkiwi.notesapplication.Home;
 
+import android.support.annotation.NonNull;
 import com.joyfullkiwi.notesapplication.Models.Note;
 import com.joyfullkiwi.notesapplication.Utils.ShortUUID;
 
+import com.joyfullkiwi.notesapplication.constants.Status;
+import io.reactivex.functions.Function;
 import java.util.Date;
 
 import io.reactivex.Emitter;
@@ -10,102 +13,85 @@ import io.reactivex.Observable;
 import io.realm.Realm;
 import io.realm.RealmQuery;
 import io.realm.RealmResults;
+import java.util.concurrent.Callable;
 
 
 public class NoteInteractor {
 
-    public static NoteInteractor instance;
+  private static NoteInteractor instance;
 
-    private NoteInteractor(){
+  private NoteInteractor() {
 
+  }
+
+  public static NoteInteractor init() {
+    if (instance == null) {
+      instance = new NoteInteractor();
     }
-
-    public static NoteInteractor init(){
-        if(instance == null){
-            instance = new NoteInteractor();
-        }
-        return instance;
-    }
+    return instance;
+  }
 
 
-    public Observable<Note> writeToDataBase(final String title, final String text){
+  public Observable<Note> writeToDataBase(final String title, final String text) {
+    return Observable.fromCallable(() -> {
+      Realm realm = Realm.getDefaultInstance();
+      realm.beginTransaction();
+      Note note = new Note();
+      note.setTitle(title);
+      note.setDate(new Date());
+      note.setText(text);
+      realm.copyToRealmOrUpdate(note);
+      realm.commitTransaction();
+      return note;
+    });
+  }
 
-        return Observable.create(emitter -> {
-            Realm realm = Realm.getDefaultInstance();
-                realm.executeTransactionAsync(bgRealm -> {
-                    Note note = bgRealm.createObject(Note.class);
-                    //note.setId(ShortUUID.next());
-                    note.setText(title);
-                    note.setDate(new Date());
-                    note.setText(text);
-                    emitter.onNext(note);
-                    emitter.onComplete();
-                });
+  public Observable<RealmResults> getAllFromBataBase() {
+    return Observable.fromCallable(() -> {
+      Realm realm = Realm.getDefaultInstance();
+      realm.beginTransaction();
+      RealmResults results = realm.where(Note.class).findAll();
+      realm.commitTransaction();
+      return results;
+    });
+  }
 
-                realm.commitTransaction();
+  public Observable<Note> getNoteById(String id) {
+    return Observable.fromCallable(() -> {
+      Realm realm = Realm.getDefaultInstance();
+      realm.beginTransaction();
+      Note note = realm.where(Note.class).equalTo("id", id).findFirst();
+      realm.commitTransaction();
+      return note;
+    });
 
-        });
-    }
+  }
 
-    public Observable<RealmResults> getAllFromBataBase(){
+  public Observable<String> deleteNoteById(String id) {
+    return Observable.fromCallable(() -> {
+      Realm realm = Realm.getDefaultInstance();
+      realm.beginTransaction();
+      Note note = realm.where(Note.class).equalTo("id", id).findFirst();
+      note.deleteFromRealm();
+      realm.commitTransaction();
+      return Status.SUCCESS;
+    }).onErrorReturn(throwable -> Status.ERROR);
 
-        return Observable.create(emitter -> {
-            Realm realm = Realm.getDefaultInstance();
-            realm.beginTransaction();
-            RealmResults results = realm.where(Note.class).findAll();
-            emitter.onNext(results);
-            emitter.onComplete();
-            realm.commitTransaction();
-        });
+  }
 
-    }
-
-    public Observable<Note> getNoteById(String id){
-
-        return Observable.create(emitter -> {
-            Realm realm = Realm.getDefaultInstance();
-            realm.beginTransaction();
-            Note note = realm.where(Note.class).equalTo("id",id).findFirst();
-            emitter.onNext(note);
-            emitter.onComplete();
-            realm.commitTransaction();
-        });
-
-    }
-
-    public Observable<RealmResults> deleteNoteById(String position){
-
-        return Observable.create(emitter -> {
-            Realm realm = Realm.getDefaultInstance();
-            realm.beginTransaction();
-            RealmQuery realmQuery = realm.where(Note.class);
-            RealmResults results = realmQuery.findAll();
-            results.remove(position);
-            emitter.onNext(results);
-            emitter.onComplete();
-            realm.commitTransaction();
-
-        });
-
-    }
-
-    public Observable<Note> redactNoteById(String id,final String title, final String text){
-
-        return Observable.create(emitter -> {
-
-            Realm realm = Realm.getDefaultInstance();
-            realm.beginTransaction();
-            //RealmResults results = realm.where(Note.class).findAll();
-            Note note = realm.where(Note.class).equalTo("id",id).findFirst();
-            note.setTitle(title);
-            note.setText(text);
-            note.setDate(new Date());
-            realm.copyToRealmOrUpdate(note);
-            emitter.onNext(note);
-            emitter.onComplete();
-            realm.commitTransaction();
-
-        });
-    }
+  public Observable<String> editNoteById(String id, final String title, final String text) {
+    return Observable.fromCallable(() -> {
+      Realm realm = Realm.getDefaultInstance();
+      realm.beginTransaction();
+      //RealmResults results = realm.where(Note.class).findAll();
+      Note note = realm.where(Note.class).equalTo("id", id).findFirst();
+      note.setTitle(title);
+      note.setText(text);
+      note.setDate(new Date());
+      realm.copyToRealmOrUpdate(note);
+      realm.commitTransaction();
+      return Status.SUCCESS;
+    }).onErrorReturn(throwable -> Status.ERROR);
+  }
 
 }

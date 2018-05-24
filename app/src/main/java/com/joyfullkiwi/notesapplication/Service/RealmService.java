@@ -23,8 +23,7 @@ public class RealmService {
         return mRealm.where(Note.class).findAll();
     }
 
-
-    public void addNoteAsync(final String title, final String text, final Date date,
+    public void addNoteAsync(final String title, final String text, final Date date) {}
     /*                         final OnTransactionCallback onTransactionCallback){
 
         // Asynchronously update objects on a background thread
