@@ -1,19 +1,11 @@
 package com.joyfullkiwi.notesapplication.Home;
 
-import android.support.annotation.NonNull;
 import com.joyfullkiwi.notesapplication.Models.Note;
-import com.joyfullkiwi.notesapplication.Utils.ShortUUID;
-
 import com.joyfullkiwi.notesapplication.constants.Status;
-import io.reactivex.functions.Function;
-import java.util.Date;
-
-import io.reactivex.Emitter;
 import io.reactivex.Observable;
 import io.realm.Realm;
-import io.realm.RealmQuery;
 import io.realm.RealmResults;
-import java.util.concurrent.Callable;
+import java.util.Date;
 
 
 public class NoteInteractor {
@@ -83,7 +75,6 @@ public class NoteInteractor {
     return Observable.fromCallable(() -> {
       Realm realm = Realm.getDefaultInstance();
       realm.beginTransaction();
-      //RealmResults results = realm.where(Note.class).findAll();
       Note note = realm.where(Note.class).equalTo("id", id).findFirst();
       note.setTitle(title);
       note.setText(text);
