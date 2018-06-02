@@ -14,6 +14,8 @@ public interface NoteView extends MvpView {
 
     void onSuccesLoadNotes(RealmResults<Note> notes);
 
+    void onSuccessLoadNote(Note note);
+
     void showNoteDetailView(String id);
 
     void setSwipeRefreshing(boolean swipe);

@@ -3,9 +3,12 @@ package com.joyfullkiwi.notesapplication.Home;
 import com.joyfullkiwi.notesapplication.Models.Note;
 import com.joyfullkiwi.notesapplication.constants.Status;
 import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import io.realm.Realm;
 import io.realm.RealmResults;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 
 public class NoteInteractor {
@@ -35,7 +38,8 @@ public class NoteInteractor {
       realm.copyToRealmOrUpdate(note);
       realm.commitTransaction();
       return note;
-    });
+    }).subscribeOn(Schedulers.io())
+            .subscribeOn(AndroidSchedulers.mainThread());
   }
 
   public Observable<RealmResults> getAllFromBataBase() {
@@ -45,7 +49,9 @@ public class NoteInteractor {
       RealmResults results = realm.where(Note.class).findAll();
       realm.commitTransaction();
       return results;
-    });
+    }).subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread());
+
   }
 
   public Observable<Note> getNoteById(String id) {
@@ -53,9 +59,11 @@ public class NoteInteractor {
       Realm realm = Realm.getDefaultInstance();
       realm.beginTransaction();
       Note note = realm.where(Note.class).equalTo("id", id).findFirst();
+      RealmResults<Note> results;
       realm.commitTransaction();
       return note;
-    });
+    }).subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread());
 
   }
 
@@ -67,7 +75,8 @@ public class NoteInteractor {
       note.deleteFromRealm();
       realm.commitTransaction();
       return Status.SUCCESS;
-    }).onErrorReturn(throwable -> Status.ERROR);
+    }).subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread()).onErrorReturn(throwable -> Status.ERROR);
 
   }
 
@@ -82,7 +91,10 @@ public class NoteInteractor {
       realm.copyToRealmOrUpdate(note);
       realm.commitTransaction();
       return Status.SUCCESS;
-    }).onErrorReturn(throwable -> Status.ERROR);
+    })
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .onErrorReturn(throwable -> Status.ERROR);
   }
 
 }
